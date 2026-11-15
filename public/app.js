@@ -68,6 +68,8 @@ const domains = [
 });
 const marquee = document.querySelector('#restaurant-marquee');
 marquee.append(document.querySelector('.lineup-controls'), lineup);
+document.querySelector('#stores').remove();
+marquee.id = 'stores';
 
 const pauseButton = document.querySelector('.lineup-pause');
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
