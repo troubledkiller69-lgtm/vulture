@@ -1,5 +1,11 @@
 {
   "name": "vulture",
   "compatibility_date": "2026-01-01",
-  "assets": { "directory": "./dist", "not_found_handling": "single-page-application" }
+  "assets": { "directory": "./dist", "not_found_handling": "single-page-application" },
+  "d1_databases": [{
+    "binding": "DB",
+    "database_name": "vulture-orders",
+    "database_id": "89e97c90-35d7-48d9-b3a6-da044afdc9f3",
+    "migrations_dir": "migrations"
+  }]
 }
