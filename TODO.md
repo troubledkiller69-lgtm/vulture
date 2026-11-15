@@ -11,7 +11,7 @@
 ## Phase 2: Orders and staff access
 
 - [x] Create the D1 database and apply the initial migration.
-- [ ] Build and validate the order submission API and order fields.
+- [ ] Finish the order submission API and order fields. A disabled, unconnected prototype exists and has unit tests; it is not production-ready.
 - [ ] Set up a separate staff Worker protected by Cloudflare Access, including all alternate hostnames and previews.
 - [ ] Build an order queue with assignment, status changes, and an audit history.
 - [ ] Test unauthenticated access, staff permissions, concurrent claims, and failure handling.

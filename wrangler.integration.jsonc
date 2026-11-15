@@ -1,0 +1,7 @@
+{
+  "name": "vulture-integration",
+  "main": "src/order-api.mjs",
+  "compatibility_date": "2026-01-01",
+  "assets": { "directory": "./dist", "binding": "ASSETS", "run_worker_first": ["/api/*"] },
+  "d1_databases": [{ "binding": "DB", "database_name": "vulture-orders", "database_id": "89e97c90-35d7-48d9-b3a6-da044afdc9f3" }]
+}
