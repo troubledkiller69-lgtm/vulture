@@ -1,3 +1,5 @@
+import { staffApi } from './staff-api.mjs';
+
 const json = (body, status = 200) => new Response(JSON.stringify(body), {
   status,
   headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' }
@@ -18,6 +20,7 @@ export function validateOrder(body) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    if (url.pathname.startsWith('/api/staff/')) return staffApi(request, env);
     if (url.pathname !== '/api/orders') return env.ASSETS.fetch(request);
     if (request.method !== 'POST') return json({ error: 'Method not allowed.' }, 405);
     // Keep intake closed until the staff workflow and anti-abuse controls are configured.
