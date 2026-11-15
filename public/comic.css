@@ -25,3 +25,24 @@ h1 em{color:#d04e40;-webkit-text-stroke:1px #070606;text-shadow:4px 4px 0 #08060
 @media(max-width:380px){.trust-grid{grid-template-columns:1fr}.trust-card{min-height:0}h1{font-size:52px}.hero-copy{padding:19px}.ticket{margin-left:4px;margin-right:4px}}
 @media(prefers-reduced-motion:reduce){.button:hover{transform:skew(-4deg)}}
 .live-summary{display:grid;gap:5px;border:2px solid #211613;background:#f1e5d0;padding:13px;margin-top:18px;font-size:13px;color:#281b17;line-height:1.4}.live-summary strong{font-family:'Barlow Condensed',sans-serif;font-size:19px;text-transform:uppercase}
+
+/* Ink, paper and panels move like a printed page coming to life. */
+.hero-art::before,.hero-art::after{content:'';position:absolute;pointer-events:none;z-index:3;background:#eee0c7;border:2px solid #080606;width:8px;height:8px;transform:rotate(45deg)}
+.hero-art::before{left:4%;top:28%}.hero-art::after{right:5%;bottom:18%;width:6px;height:6px;background:#b9382e}
+.steps article,.trust-card{transition:transform .18s ease,box-shadow .18s ease}
+.steps article:hover,.trust-card:hover{transform:translate(-3px,-4px) rotate(-.5deg);box-shadow:9px 10px 0 #050404}
+details summary{transition:color .18s ease}details summary:hover{color:#f08c7c}
+@media (prefers-reduced-motion:no-preference){
+  .hero-copy{animation:panel-enter-left .55s cubic-bezier(.2,.8,.2,1) both}
+  .hero-art{animation:panel-enter-right .65s .12s cubic-bezier(.2,.8,.2,1) both}
+  .comic-burst{animation:stamp-in .45s .55s cubic-bezier(.2,1.5,.4,1) both}
+  .hero-art::before{animation:ink-float 3.6s ease-in-out infinite}
+  .hero-art::after{animation:ink-float 4.4s .6s ease-in-out infinite reverse}
+  .ticket-message{animation:message-in .35s .85s ease-out both}
+  @keyframes panel-enter-left{from{opacity:0;transform:translate(-28px,12px) rotate(-3deg)}to{opacity:1;transform:rotate(-1deg)}}
+  @keyframes panel-enter-right{from{opacity:0;transform:translate(30px,18px) rotate(4deg)}to{opacity:1;transform:rotate(2deg)}}
+  @keyframes stamp-in{from{opacity:0;transform:rotate(20deg) scale(.6)}to{opacity:1;transform:rotate(12deg) scale(1)}}
+  @keyframes message-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes ink-float{0%,100%{transform:translateY(0) rotate(45deg)}50%{transform:translateY(-10px) rotate(90deg)}}
+}
+@media (prefers-reduced-motion:reduce){.steps article,.trust-card,details summary{transition:none}}
