@@ -2,30 +2,34 @@
 
 ## Phase 1: Foundation and presentation
 
-- [x] Deploy the preview from GitHub to Cloudflare Workers.
+- [x] Deploy the site to Cloudflare Workers on `vulturefood.org` and `www.vulturefood.org`.
 - [x] Add the supplied Vulture artwork, favicon, touch icon, and app manifest.
 - [x] Add the available restaurant lineup, pickup details, and motion controls.
-- [ ] Verify the live deployment, share preview, and mobile layouts on real devices.
+- [ ] Verify final mobile and desktop layouts on real devices.
 - [ ] Agree on the precise 60% offer and any restrictions before publishing pricing claims.
 
-## Phase 2: Orders and staff access
+## Phase 2: Orders and crew
 
-- [x] Create the D1 database and apply the initial migration.
-- [ ] Finish the order submission API and order fields. A disabled, unconnected prototype exists and has unit tests; it is not production-ready.
-- [ ] Set up a separate staff Worker protected by Cloudflare Access, including all alternate hostnames and previews.
-- [ ] Build an order queue with assignment, status changes, and an audit history.
-- [ ] Test unauthenticated access, staff permissions, concurrent claims, and failure handling.
+- [x] Create the D1 database and apply all migrations remotely.
+- [x] Require an account before ordering and store every order as a private ticket.
+- [x] Add cart screenshots stored privately in KV with owner and crew-only access.
+- [x] Build the crew queue with claim, placing, complete, and cancel transitions plus audit events.
+- [x] Add crew replies, private notes, and customer replies inside the ticket.
+- [x] Add Turnstile verification and rate limits for accounts, orders, messages, and crew sign-in.
+- [x] Cover order, ticket ownership, photo, account, and crew authorization paths with tests.
+- [ ] Create the real crew accounts and confirm a full order in production.
+- [ ] Add a password reset flow; there is no email sender configured yet.
 
 ## Phase 3: Customer experience
 
-- [ ] Add private order tracking and customer messaging with proper authorization.
-- [ ] Add image uploads and retention controls if needed.
-- [ ] Decide on payment processing, refund rules, and staff workflow.
+- [x] Add an in-page account view, order list, and ticket conversation.
+- [ ] Add status notifications instead of relying on the customer to reopen the ticket.
+- [ ] Decide on payment processing, refund rules, and crew workflow.
 - [ ] Publish real reviews and community links when available.
 
 ## Phase 4: Launch readiness
 
 - [ ] Add a privacy notice, terms, and contact method based on the actual service.
-- [ ] Configure production domain, social share image, monitoring, backups, and recovery.
+- [ ] Configure monitoring, backups, and recovery for D1 and KV.
 - [ ] Test keyboard navigation, screen readers, reduced motion, mobile devices, and error states.
-- [ ] Verify deployed assets and perform end-to-end tests before accepting live orders.
+- [ ] Verify deployed assets and perform a full order end-to-end test before advertising.

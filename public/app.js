@@ -11,11 +11,73 @@ nav.addEventListener('click', event => {
     nav.classList.remove('open');
   }
 });
-document.querySelector('#order-form').addEventListener('submit', event => {
+let orderConfig = { ordersEnabled: false };
+let widgetId;
+let photoData = null;
+document.querySelector('#photo').addEventListener('change', async event => {
+  photoData = null;
+  const preview = document.querySelector('#photo-preview');
+  preview.replaceChildren();
+  const file = event.target.files[0];
+  if (!file) return;
+  if (!['image/jpeg', 'image/png'].includes(file.type) || file.size > 2000000) {
+    event.target.value = '';
+    document.querySelector('.form-result').textContent = 'Choose a JPEG or PNG smaller than 2 MB.';
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = () => {
+    photoData = reader.result;
+    const image = document.createElement('img'); image.src = photoData; image.alt = 'Your selected cart screenshot';
+    preview.append(image);
+  };
+  reader.readAsDataURL(file);
+});
+fetch('/api/config', { cache: 'no-store' }).then(response => response.json()).then(config => {
+  orderConfig = config;
+  if (!config.ordersEnabled) return;
+  document.querySelector('#order-form button').disabled = false;
+  if (!config.turnstileSiteKey) return;
+  const script = document.createElement('script');
+  script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+  script.onload = () => {
+    try {
+      widgetId = window.turnstile.render('#verification', { sitekey: config.turnstileSiteKey, action: 'order', 'error-callback': () => { document.querySelector('.form-result').textContent = 'Verification failed to load. Refresh the page and try again.'; } });
+      document.querySelector('#order-form button').disabled = false;
+      document.querySelector('.order-copy .warning').textContent = 'Your request is sent to our team. No payment is collected here.';
+    } catch {
+      document.querySelector('.form-result').textContent = 'Verification could not start. Refresh the page and try again.';
+    }
+  };
+  script.onerror = () => { document.querySelector('.form-result').textContent = 'Verification could not load. Check your connection and refresh.'; };
+  document.head.append(script);
+}).catch(() => {});
+document.querySelector('#order-form').addEventListener('submit', async event => {
   event.preventDefault();
-  const restaurant = document.querySelector('#restaurant').value.trim();
   const result = document.querySelector('.form-result');
-  result.textContent = `Preview ready for ${restaurant}. Nothing has been submitted; ordering is not connected yet.`;
+  const identity = await fetch('/api/account/me', { cache: 'no-store' }).catch(() => null);
+  if (!identity?.ok) { location.hash = '#account'; return; }
+  if (!orderConfig.ordersEnabled) { result.textContent = 'Ordering is not open yet.'; return; }
+  if (!widgetId) { result.textContent = 'Verification is still loading. Wait a moment and send again.'; return; }
+  const button = event.target.querySelector('button');
+  button.disabled = true;
+  result.textContent = 'Sending your request...';
+  try {
+    const response = await fetch('/api/orders', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ restaurant: document.querySelector('#restaurant').value.trim(), details: document.querySelector('#details').value.trim(), contact: document.querySelector('#contact').value.trim(), cartTotalCents: Math.round(Number(document.querySelector('#total').value) * 100), fulfillment: document.querySelector('#fulfillment').value.toLowerCase(), photo: photoData, turnstileToken: window.turnstile.getResponse(widgetId) })
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Could not send your request.');
+    result.replaceChildren();
+    result.append(`Request received. Your reference is ${data.id}. `);
+    const ticketLink = document.createElement('a');
+    ticketLink.href = '#tickets';
+    ticketLink.textContent = 'Open your ticket';
+    result.append(ticketLink);
+    event.target.reset(); photoData = null; document.querySelector('#photo-preview').replaceChildren(); updateSummary();
+  } catch (error) { result.textContent = error.message || 'Could not send your request. Try again.'; }
+  finally { button.disabled = false; window.turnstile?.reset(widgetId); }
 });
 
 const form = document.querySelector('#order-form');
@@ -57,14 +119,7 @@ const domains = [
   'tendergreens.com', 'pizzaguys.com', 'imospizza.com', 'marcos.com',
   'smashburger.com', 'potbelly.com', 'charleys.com', 'slicelife.com'
 ];
-// These sites returned missing, tiny, or unrelated favicons in the logo audit.
-// Keep their names in the restaurant list, but omit them from the logo carousel.
-const excludedLogoDomains = new Set([
-  'smoothieking.com', 'tropicalsmoothiecafe.com', 'farmerboys.com',
-  'applebees.com', 'pizzaguys.com', 'imospizza.com', 'marcos.com', 'potbelly.com'
-]);
 [...track.children].forEach((item, index) => {
-  if (excludedLogoDomains.has(domains[index])) { item.remove(); return; }
   const name = item.firstChild.textContent.trim();
   const image = document.createElement('img');
   image.src = `https://www.google.com/s2/favicons?sz=128&domain=${domains[index]}`;
@@ -105,7 +160,7 @@ function moveLineup(time) {
 }
 requestAnimationFrame(moveLineup);
 
-const pages = ['home', 'how', 'stores', 'order', 'faq'];
+const pages = ['home', 'how', 'stores', 'order', 'faq', 'account', 'tickets'];
 const mobileNav = document.createElement('nav');
 mobileNav.className = 'mobile-nav';
 mobileNav.setAttribute('aria-label', 'Mobile navigation');
@@ -119,7 +174,7 @@ document.body.append(mobileNav);
 function showPage() {
   const id = location.hash.slice(1);
   const page = pages.includes(id) ? id : 'home';
-  for (const name of pages) document.getElementById(name).hidden = name !== page;
+  for (const name of pages) { const panel=document.getElementById(name); if(panel) panel.hidden = name !== page; }
   document.querySelector('#trust').hidden = page !== 'home';
   marquee.hidden = page !== 'home';
   for (const link of document.querySelectorAll('#nav a, .mobile-nav a')) {
@@ -130,3 +185,10 @@ function showPage() {
 }
 window.addEventListener('hashchange', showPage);
 showPage();
+const accountScript = document.createElement('script');
+accountScript.src = '/account.js';
+accountScript.onload = showPage;
+document.body.append(accountScript);
+const accountLink=document.createElement('a');
+accountLink.href='#account';accountLink.textContent='Create an account or sign in before ordering';
+document.querySelector('#order-form').prepend(accountLink);

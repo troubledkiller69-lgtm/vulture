@@ -1,17 +1,59 @@
 # Vulture
 
-Mobile-friendly preview of a food-ordering concierge. This is a static frontend: it does not submit orders, take payments, authenticate users, or provide chat.
+Concierge food ordering for [vulturefood.org](https://vulturefood.org). Customers create an account, send a cart with an optional screenshot, and talk to a crew member through a private ticket until the order is placed.
 
-## Develop and deploy
+## Stack
 
-Run `npm install`, `npm test`, then `npm run build`. Deploy via Cloudflare Workers Git integration with build command `npm run build` and deploy command `npx wrangler deploy`. The static asset directory is configured in `wrangler.jsonc`. Pushes to the configured production branch trigger builds automatically. The Cloudflare Workers free plan applies within its limits.
+- Cloudflare Worker (`src/order-api.mjs`) serving the static site from `dist/` plus `/api/*`
+- Cloudflare D1 (`vulture-orders`) for accounts, orders, ticket messages, and audit events
+- Cloudflare KV (`PHOTOS`) for private cart screenshots
+- Turnstile on order submission, rate limiting bindings on accounts, orders, messages, and staff sign-in
+- Staff dashboard at `/staff/`, authenticated through the `staff_users` table by default; Cloudflare Access JWT verification is also supported when `ACCESS_TEAM_DOMAIN` and `ACCESS_AUD` are set
 
-The logo files in `public/` are supplied artwork. Replace them with transparent assets if available.
+## Develop
 
-## Database preparation
+```powershell
+npm install
+npx wrangler d1 migrations apply vulture-orders --local
+npx wrangler dev
+```
 
-The Worker configuration references the `vulture-orders` D1 database. The first migration creates order and order-event tables. To test locally, run `npx wrangler d1 migrations apply vulture-orders --local`. After authenticating Wrangler and verifying the selected Cloudflare account, run `npx wrangler d1 migrations apply vulture-orders --remote` to create those tables in the live database. Deploying the static site does not apply migrations.
+`npm test` runs the Node test suite. `npm run build` copies `public/` and `staff/` into `dist/`.
 
-The binding and schema do not implement an order API or a staff dashboard. Do not store customer data until authentication, authorization, and the order workflow are implemented and tested.
+## Deploy
 
-`src/order-api.mjs`, `src/staff-api.mjs`, and `staff/` are unconnected prototypes. The production configuration does not point at them and order intake defaults to disabled. The contact migration `0002_order_contact.sql` has only been applied locally. The staff API is not connected to an Access application. Do not enable intake until staff access, status changes, abuse controls, customer communication, privacy notice, and integration tests are ready. `wrangler.integration.jsonc` is for local development only; it must not be used for deployment.
+```powershell
+npm run build
+npx wrangler deploy
+```
+
+Apply schema changes remotely before deploying code that depends on them:
+
+```powershell
+npx wrangler d1 migrations apply vulture-orders --remote
+```
+
+## Create a crew account
+
+```powershell
+npm run staff:create -- crew@example.com "Crew Name"
+```
+
+The script asks for a password (12 to 128 characters) and writes the account to the remote database. For non-interactive use, set `STAFF_PASSWORD` in the environment first. Crew members sign in at `/staff/`.
+
+## Configuration
+
+`wrangler.jsonc` holds the D1, KV, and rate limit bindings plus the public Turnstile site key. Secrets are set separately:
+
+```powershell
+npx wrangler secret put TURNSTILE_SECRET
+```
+
+Set `ORDERS_ENABLED` and `ACCOUNTS_ENABLED` to `"false"` to close intake or registration without a code change. Optional Access settings: `ACCESS_TEAM_DOMAIN`, `ACCESS_AUD`, and `STAFF_ACCESS_ONLY=true` to disable password sign-in once Access is in front of the Worker.
+
+## Data handling
+
+- Passwords are hashed with PBKDF2-SHA256 (100,000 iterations), which is the maximum Cloudflare Workers supports natively.
+- Session cookies use the `__Host-` prefix, `HttpOnly`, `Secure`, and `SameSite`.
+- Customer tickets are scoped to the signed-in customer; staff-only notes never appear in customer responses.
+- Screenshots are limited to 2 MB JPEG or PNG, stored in KV under the order ID, and served only to the ticket owner or signed-in crew.

@@ -1,3 +1,82 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Staff orders | Vulture</title><link rel="stylesheet" href="/staff.css"></head>
-<body><header><strong>VULTURE</strong><span>Staff orders</span><button id="refresh" type="button">Refresh</button></header><main><h1>Order queue</h1><p>Open an order to view its details and update its status.</p><p id="notice" role="status" aria-live="polite">Loading orders...</p><section id="orders" aria-label="Orders"></section></main><script src="/staff.js" defer></script></body></html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Crew tickets | Vulture</title>
+<link rel="stylesheet" href="/staff/staff.css">
+</head>
+<body>
+<header>
+  <strong>VULTURE</strong>
+  <span>Crew tickets</span>
+  <div class="header-actions">
+    <span id="identity" hidden></span>
+    <button id="signout" type="button" hidden>Sign out</button>
+    <button id="refresh" type="button" hidden>Refresh</button>
+  </div>
+</header>
+
+<main>
+  <section id="signin-view" class="signin" hidden>
+    <h1>Crew sign in</h1>
+    <p>Only approved crew accounts can read orders and reply to customers.</p>
+    <form id="signin-form">
+      <label for="email">Work email</label>
+      <input id="email" type="email" autocomplete="username" required maxlength="254">
+      <label for="password">Password</label>
+      <input id="password" type="password" autocomplete="current-password" required maxlength="128">
+      <button type="submit" class="button">Sign in</button>
+    </form>
+    <p id="signin-notice" role="status"></p>
+  </section>
+
+  <section id="board-view" hidden>
+    <div class="board-head">
+      <h1>Order tickets</h1>
+      <div class="filters" role="tablist" aria-label="Ticket filters">
+        <button type="button" data-filter="open" class="active" role="tab" aria-selected="true">Open</button>
+        <button type="button" data-filter="mine" role="tab" aria-selected="false">Assigned to me</button>
+        <button type="button" data-filter="unassigned" role="tab" aria-selected="false">Unassigned</button>
+        <button type="button" data-filter="closed" role="tab" aria-selected="false">Closed</button>
+        <button type="button" data-filter="all" role="tab" aria-selected="false">All</button>
+      </div>
+    </div>
+    <p id="notice" role="status" aria-live="polite">Loading tickets...</p>
+    <div class="board">
+      <section id="orders" aria-label="Tickets"></section>
+      <section id="ticket" class="ticket" aria-live="polite">
+        <p class="empty">Select a ticket to read it and reply.</p>
+      </section>
+    </div>
+  </section>
+</main>
+
+<template id="ticket-template">
+  <div class="ticket-head">
+    <div>
+      <h2></h2>
+      <p class="ticket-meta"></p>
+    </div>
+    <span class="status"></span>
+  </div>
+  <dl class="ticket-fields"></dl>
+  <div class="ticket-actions"></div>
+  <a class="photo-link" target="_blank" rel="noopener noreferrer">Open cart screenshot</a>
+  <h3>Conversation</h3>
+  <div class="thread"></div>
+  <form class="reply">
+    <div class="reply-modes" role="group" aria-label="Message type">
+      <label><input type="radio" name="visibility" value="customer" checked> Reply to customer</label>
+      <label><input type="radio" name="visibility" value="staff"> Private note</label>
+    </div>
+    <label for="reply-body">Message</label>
+    <textarea id="reply-body" maxlength="2000" required></textarea>
+    <button type="submit" class="button">Send message</button>
+    <p class="reply-status" role="status"></p>
+  </form>
+</template>
+
+<script src="/staff/staff.js" defer></script>
+</body>
+</html>
