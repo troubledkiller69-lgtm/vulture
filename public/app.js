@@ -68,8 +68,7 @@ const domains = [
 });
 const marquee = document.querySelector('#restaurant-marquee');
 marquee.append(document.querySelector('.lineup-controls'), lineup);
-document.querySelector('#stores').remove();
-marquee.id = 'stores';
+document.querySelector('.lineup-full').open = true;
 
 const pauseButton = document.querySelector('.lineup-pause');
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
@@ -98,3 +97,29 @@ function moveLineup(time) {
   requestAnimationFrame(moveLineup);
 }
 requestAnimationFrame(moveLineup);
+
+const pages = ['home', 'how', 'stores', 'order', 'faq'];
+const mobileNav = document.createElement('nav');
+mobileNav.className = 'mobile-nav';
+mobileNav.setAttribute('aria-label', 'Mobile navigation');
+for (const [id, label] of [['home', 'Home'], ['stores', 'Stores'], ['order', 'Order'], ['faq', 'Help']]) {
+  const link = document.createElement('a');
+  link.href = `#${id}`;
+  link.textContent = label;
+  mobileNav.append(link);
+}
+document.body.append(mobileNav);
+function showPage() {
+  const id = location.hash.slice(1);
+  const page = pages.includes(id) ? id : 'home';
+  for (const name of pages) document.getElementById(name).hidden = name !== page;
+  document.querySelector('#trust').hidden = page !== 'home';
+  marquee.hidden = page !== 'home';
+  for (const link of document.querySelectorAll('#nav a, .mobile-nav a')) {
+    if (link.getAttribute('href') === `#${page}`) link.setAttribute('aria-current', 'page');
+    else link.removeAttribute('aria-current');
+  }
+  window.scrollTo(0, 0);
+}
+window.addEventListener('hashchange', showPage);
+showPage();
