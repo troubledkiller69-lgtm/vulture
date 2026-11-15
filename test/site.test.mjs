@@ -7,3 +7,10 @@ test('site includes essential navigation and honest preview state', async () => 
   assert.match(html, /Orders, chat and payments are not connected/);
   assert.match(html, /aria-expanded="false"/);
 });
+test('restaurant lineup excludes unavailable stores and preserves pickup details', async () => {
+  const html = await readFile('public/index.html', 'utf8');
+  const lineup = html.split('<ul class="lineup-track">')[1].split('</ul>')[0];
+  assert.match(lineup, /Insomnia Cookies<small>Pickup and delivery/);
+  assert.match(lineup, /Cinnabon<small>Pickup only/);
+  assert.doesNotMatch(lineup, /Papa John|Wingstop|Starbucks|Raising Cane/);
+});

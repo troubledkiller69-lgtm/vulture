@@ -38,3 +38,38 @@ function updateSummary() {
 form.addEventListener('input', updateSummary);
 form.addEventListener('change', updateSummary);
 updateSummary();
+
+const lineup = document.querySelector('.lineup-window');
+const track = lineup.querySelector('.lineup-track');
+const fullList = document.querySelector('.lineup-list');
+const list = document.createElement('ul');
+for (const item of track.children) list.append(item.cloneNode(true));
+fullList.append(list);
+
+const pauseButton = document.querySelector('.lineup-pause');
+const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+let paused = reducedMotion.matches;
+let hovering = false;
+let lastTime = 0;
+function updatePauseButton() {
+  pauseButton.textContent = paused ? 'Play' : 'Pause';
+  pauseButton.setAttribute('aria-pressed', String(paused));
+}
+updatePauseButton();
+pauseButton.addEventListener('click', () => { paused = !paused; updatePauseButton(); });
+lineup.addEventListener('pointerenter', () => { hovering = true; });
+lineup.addEventListener('pointerleave', () => { hovering = false; });
+lineup.addEventListener('focusin', () => { hovering = true; });
+lineup.addEventListener('focusout', () => { hovering = false; });
+document.querySelector('.lineup-prev').addEventListener('click', () => lineup.scrollBy({ left: -260, behavior: reducedMotion.matches ? 'instant' : 'smooth' }));
+document.querySelector('.lineup-next').addEventListener('click', () => lineup.scrollBy({ left: 260, behavior: reducedMotion.matches ? 'instant' : 'smooth' }));
+reducedMotion.addEventListener('change', event => { if (event.matches) { paused = true; updatePauseButton(); } });
+function moveLineup(time) {
+  if (lastTime && !paused && !hovering && !document.hidden) {
+    if (lineup.scrollLeft >= lineup.scrollWidth - lineup.clientWidth - 1) lineup.scrollLeft = 0;
+    else lineup.scrollLeft += Math.min(time - lastTime, 50) * 0.035;
+  }
+  lastTime = time;
+  requestAnimationFrame(moveLineup);
+}
+requestAnimationFrame(moveLineup);
