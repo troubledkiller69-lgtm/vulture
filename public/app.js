@@ -57,7 +57,14 @@ const domains = [
   'tendergreens.com', 'pizzaguys.com', 'imospizza.com', 'marcos.com',
   'smashburger.com', 'potbelly.com', 'charleys.com', 'slicelife.com'
 ];
+// These sites returned missing, tiny, or unrelated favicons in the logo audit.
+// Keep their names in the restaurant list, but omit them from the logo carousel.
+const excludedLogoDomains = new Set([
+  'smoothieking.com', 'tropicalsmoothiecafe.com', 'farmerboys.com',
+  'applebees.com', 'pizzaguys.com', 'imospizza.com', 'marcos.com', 'potbelly.com'
+]);
 [...track.children].forEach((item, index) => {
+  if (excludedLogoDomains.has(domains[index])) { item.remove(); return; }
   const name = item.firstChild.textContent.trim();
   const image = document.createElement('img');
   image.src = `https://www.google.com/s2/favicons?sz=128&domain=${domains[index]}`;
