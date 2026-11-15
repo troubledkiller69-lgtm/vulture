@@ -46,6 +46,29 @@ const list = document.createElement('ul');
 for (const item of track.children) list.append(item.cloneNode(true));
 fullList.append(list);
 
+const domains = [
+  'redrobin.com', 'pandaexpress.com', 'dairyqueen.com', 'dominos.com',
+  'jerseymikes.com', 'hungryhowies.com', 'jamba.com', 'fiveguys.com',
+  'qdoba.com', 'sonicdrivein.com', 'insomniacookies.com', 'habitburger.com',
+  'buffalowildwings.com', 'crackerbarrel.com', 'moes.com', 'slimchickens.com',
+  'zaxbys.com', 'smoothieking.com', 'tacocabana.com', 'tropicalsmoothiecafe.com',
+  'churchs.com', 'cinnabon.com', 'dunkindonuts.com', 'happyicela.com',
+  'farmerboys.com', 'applebees.com', 'cava.com', 'bojangles.com',
+  'tendergreens.com', 'pizzaguys.com', 'imospizza.com', 'marcos.com',
+  'smashburger.com', 'potbelly.com', 'charleys.com', 'slicelife.com'
+];
+[...track.children].forEach((item, index) => {
+  const name = item.firstChild.textContent.trim();
+  const image = document.createElement('img');
+  image.src = `https://www.google.com/s2/favicons?sz=128&domain=${domains[index]}`;
+  image.alt = name;
+  image.loading = 'lazy';
+  image.addEventListener('error', () => { item.hidden = true; });
+  item.replaceChildren(image);
+});
+const marquee = document.querySelector('#restaurant-marquee');
+marquee.append(document.querySelector('.lineup-controls'), lineup);
+
 const pauseButton = document.querySelector('.lineup-pause');
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 let paused = reducedMotion.matches;
