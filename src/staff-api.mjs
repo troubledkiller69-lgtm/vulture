@@ -1,4 +1,5 @@
 import { createRemoteJWKSet, jwtVerify } from 'jose';
+import { readLimited } from './request-body.mjs';
 
 const response = (data, status = 200) => Response.json(data, { status, headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' } });
 const keys = new Map();
@@ -41,10 +42,9 @@ export async function staffApi(request, env) {
     if (!(request.headers.get('content-type') || '').toLowerCase().startsWith('application/json')) return response({ error: 'Expected JSON.' }, 415);
     let body;
     try {
-      const text = await request.text();
-      if (new TextEncoder().encode(text).byteLength > 1024) return response({ error: 'Request too large.' }, 413);
+      const text = await readLimited(request, 1024);
       body = JSON.parse(text);
-    } catch { return response({ error: 'Invalid request.' }, 400); }
+    } catch (error) { return response({ error: 'Invalid request.' }, error instanceof RangeError ? 413 : 400); }
     if (!body || !Object.hasOwn(transitions, body.previousStatus) || !transitions[body.previousStatus].includes(body.status)) return response({ error: 'Invalid status change.' }, 400);
     try {
       const id = url.pathname.split('/')[4];

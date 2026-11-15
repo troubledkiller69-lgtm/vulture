@@ -1,4 +1,5 @@
 import { staffApi } from './staff-api.mjs';
+import { readLimited } from './request-body.mjs';
 
 const json = (body, status = 200) => new Response(JSON.stringify(body), {
   status,
@@ -17,6 +18,19 @@ export function validateOrder(body) {
   return { restaurant, details, contact, fulfillment, cents };
 }
 
+export async function verifyTurnstile(secret, token, hostname, client = fetch) {
+  if (!secret || typeof token !== 'string' || !token || token.length > 2048) return false;
+  try {
+    const result = await client('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ secret, response: token }), signal: AbortSignal.timeout(8000)
+    });
+    if (!result.ok) return false;
+    const data = await result.json();
+    return data.success === true && data.hostname === hostname && data.action === 'order';
+  } catch { return false; }
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -30,12 +44,12 @@ export default {
     const length = Number(request.headers.get('content-length') || 0);
     if (length > 8192) return json({ error: 'Request is too large.' }, 413);
     let text;
-    try { text = await request.text(); } catch { return json({ error: 'Unable to read request.' }, 400); }
-    if (new TextEncoder().encode(text).byteLength > 8192) return json({ error: 'Request is too large.' }, 413);
+    try { text = await readLimited(request, 8192); } catch (error) { return json({ error: 'Unable to read request.' }, error instanceof RangeError ? 413 : 400); }
     let body;
     try { body = JSON.parse(text); } catch { return json({ error: 'Invalid request.' }, 400); }
     const order = validateOrder(body);
     if (!order) return json({ error: 'Check the restaurant, order details, contact and total.' }, 400);
+    if (!await verifyTurnstile(env.TURNSTILE_SECRET, body.turnstileToken, url.hostname)) return json({ error: 'Verification failed. Please try again.' }, 400);
     const id = crypto.randomUUID();
     try {
       await env.DB.prepare('INSERT INTO orders (id, restaurant, details, contact, cart_total_cents, fulfillment) VALUES (?, ?, ?, ?, ?, ?)')
