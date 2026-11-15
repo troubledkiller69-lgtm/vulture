@@ -17,3 +17,24 @@ document.querySelector('#order-form').addEventListener('submit', event => {
   const result = document.querySelector('.form-result');
   result.textContent = `Preview ready for ${restaurant}. Nothing has been submitted; ordering is not connected yet.`;
 });
+
+const form = document.querySelector('#order-form');
+const summary = document.createElement('div');
+summary.className = 'live-summary';
+summary.setAttribute('aria-live', 'polite');
+form.querySelector('button').before(summary);
+
+function updateSummary() {
+  const restaurant = form.querySelector('#restaurant').value.trim();
+  const amount = Number(form.querySelector('#total').value);
+  const fulfillment = form.querySelector('#fulfillment').value;
+  summary.replaceChildren();
+  const heading = document.createElement('strong');
+  heading.textContent = 'Your order preview';
+  const details = document.createElement('span');
+  details.textContent = `${restaurant || 'Restaurant not entered'} · ${fulfillment} · ${amount > 0 ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount) : 'Add a cart total'}`;
+  summary.append(heading, details);
+}
+form.addEventListener('input', updateSummary);
+form.addEventListener('change', updateSummary);
+updateSummary();
