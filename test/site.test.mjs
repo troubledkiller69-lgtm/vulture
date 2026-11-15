@@ -14,3 +14,10 @@ test('restaurant lineup excludes unavailable stores and preserves pickup details
   assert.match(lineup, /Cinnabon<small>Pickup only/);
   assert.doesNotMatch(lineup, /Papa John|Wingstop|Starbucks|Raising Cane/);
 });
+test('site has app icons and manifest', async () => {
+  const html = await readFile('public/index.html', 'utf8');
+  assert.match(html, /rel="icon" href="\/favicon.ico"/);
+  assert.match(html, /rel="apple-touch-icon"/);
+  const manifest = JSON.parse(await readFile('public/site.webmanifest', 'utf8'));
+  for (const icon of manifest.icons) assert.ok((await readFile(`public${icon.src}`)).length > 0);
+});
