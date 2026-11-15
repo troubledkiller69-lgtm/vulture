@@ -20,6 +20,8 @@ async function session(){
     document.querySelector('#account-greeting').textContent=`Signed in as ${customer.name} (${customer.email}).`;
     const contact=document.querySelector('#contact');
     if(contact && !contact.value) contact.value=customer.email;
+    const signinLink=document.querySelector('#order-form>a');
+    if(signinLink){signinLink.textContent=`Signed in as ${customer.name}. View your account`;}
   }
   return customer;
 }
